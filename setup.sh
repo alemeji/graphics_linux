@@ -23,6 +23,6 @@ sudo docker pull phpmyadmin/phpmyadmin:4.8
 sudo docker pull portainer/portainer
 
 #Creacion del directorio de trabajo
-WORK_DIR=/proyectos/virtualenv
-sudo mkdir -p $WORKDIR
-sudo cp crontab.txt backup_db initdb.yml prod.yml $WORKDIR
+WORK_DIR=/proyectos/virtualenv/
+sudo mkdir -p $WORK_DIR
+sudo cp crontab.txt backup_db initdb.yml prod.yml $WORK_DIR
