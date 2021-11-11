@@ -1,0 +1,46 @@
+version: "3.2"
+services:
+  db:
+    image: percona:5.7 #mysql:5.7
+    container_name: db_graphics
+    env_file: .env
+    # Win7 64Bits
+    #command: --innodb_use_native_aio=0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # win10
+    #command: bash -c "ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone"
+    #command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="${MYSQL_MODE}"
+    command: --innodb_use_native_aio=0 --socket=/tmp/mysql.sock --explicit-defaults-for-timestamp=ON --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="${MYSQL_MODE}"
+    # ports:
+    #   - 3306:3306
+    expose:
+      - 3306
+    volumes:
+      # - ./my.cnf:/etc/mysql/my.cnf
+      - ${GRAPHICS_PATH_DRIVER_DATA}/data/mysql:/var/lib/mysql
+    networks:
+      - graphics_net
+    healthcheck:
+      test: ["CMD", "mysqladmin ", "ping", "--silent"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3  
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:4.8
+    container_name: phpmyadmin_graphics
+    env_file: .env
+    links:
+      - db:mysql
+    ports:
+      - 8080:80
+    depends_on:
+      - db
+    networks:
+      - graphics_net
+        
+
+networks:
+  graphics_net:
+    driver: bridge
+volumes:
+  portainer_data:       

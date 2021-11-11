@@ -1,0 +1,148 @@
+version: "3.2"
+services:
+  db:
+    image: percona:5.7 #mysql:5.7
+    container_name: db_graphics
+    restart: always
+    env_file: .env
+    # Win7 64Bits
+    #command: --innodb_use_native_aio=0 --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    # win10
+    #command: bash -c "ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone" 
+    #command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="${MYSQL_MODE}"
+    command: --innodb_use_native_aio=0 --socket=/tmp/mysql.sock --explicit-defaults-for-timestamp=ON --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-mode="${MYSQL_MODE}"
+    ports:
+      - 3306:3306
+    volumes:
+      # - ./my.cnf:/etc/mysql/my.cnf
+      - ${GRAPHICS_PATH_DRIVER_DATA}/data/mysql:/var/lib/mysql
+      - ${GRAPHICS_PATH_DRIVER_BACKUP}:/backup
+    networks:
+      - graphics_net
+    healthcheck:
+      test: ["CMD", "mysqladmin ", "ping", "--silent"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3  
+  web:
+    image: alemeji/graphics:latest
+    env_file: .env
+    # build: ./graphics
+    container_name: web_graphics
+    restart: always
+    #command: django-admin startproject graphics . 
+    #command: python manage.py runserver 0.0.0.0:8000 
+    #command:  bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: bash -c "ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone"
+    command: bash -c "echo 'Waiting 20s' && sleep 20 && python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 --noreload"
+    #command: gunicorn -c ./gunicorn.conf graphics.wsgi
+    volumes:
+      #- ./graphics:/webapp
+      - ${GRAPHICS_PATH_DRIVER_IMAGES}:${GRAPHICS_PATH_IMAGES}/uploads
+      # - ./recharge/static:/webapp/static
+      # - ./recharge/media:/webapp/media
+    links:
+      - rabbit
+    ports:
+      - 8000:8000
+    depends_on:
+      - db
+    networks:
+      - graphics_net
+
+  db-backup:
+    image: alemeji/db-backup:latest
+    # build: ./alpine
+    container_name: db_backup_graphics
+    restart: always
+    env_file: .env
+    command: /bin/sh -c "ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone" 
+    command: /bin/sh -c "ln -snf /etc/periodic/nightly/backup_db /etc/periodic/daily/backup_db ; crond; while sleep 30; do echo "Running..." ; done"
+    volumes:
+      - ./backup_db:/etc/periodic/nightly/backup_db:rw
+      - ./crontab.txt:/etc/crontabs/root:rw
+      - ${GRAPHICS_PATH_DRIVER_BACKUP}:/backup
+    depends_on:
+      - web      
+    networks:
+      - graphics_net
+
+  # RabbitMQ
+  rabbit:
+    #hostname: rabbit
+    image: rabbitmq:3.6.1
+    container_name: rabbit_graphics
+    restart: always
+    env_file: .env
+    # environment:
+    #   - RABBITMQ_DEFAULT_USER=admin
+    #   - RABBITMQ_DEFAULT_PASS=mypass
+    ports:
+      - "5672:5672"  # we forward this port because it's useful for debugging
+      - "15672:15672"  # here, we can access rabbitmq management plugin
+    networks:
+      - graphics_net
+
+  celery:
+    image: alemeji/graphics:latest
+    container_name: celery_graphics
+    restart: always
+    env_file: .env    
+    command: bash -c "ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone"
+    command: bash -c "echo 'Waiting 30s' && sleep 30 && celery -A graphics worker -l info"
+    volumes:
+      - ${GRAPHICS_PATH_DRIVER_IMAGES}:${GRAPHICS_PATH_IMAGES}/uploads
+    depends_on:
+      - db
+      - rabbit
+      - web
+    networks:
+      - graphics_net
+
+  celery-beat:
+    image: alemeji/graphics:latest
+    container_name: celery-beat_graphics
+    restart: always
+    env_file: .env    
+    command: bash -c "ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone"
+    command: bash -c "echo 'Waiting 30s' && sleep 30 && celery -A graphics beat"
+    volumes:
+      - ${GRAPHICS_PATH_DRIVER_IMAGES}:${GRAPHICS_PATH_IMAGES}/uploads
+    depends_on:
+      - db
+      - rabbit
+      - web
+    networks:
+      - graphics_net
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:4.8 # phpmyadmin/phpmyadmin
+    container_name: phpmyadmin_graphics
+    restart: always
+    env_file: .env
+    links:
+      - db:mysql
+    ports:
+      - 8080:80
+    depends_on:
+      - db
+    networks:
+      - graphics_net
+
+  ui:
+    image: portainer/portainer
+    container_name: portainer_graphics
+    restart: always
+    ports:
+      - 9000:9000
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - graphics_net              
+
+networks:
+  graphics_net:
+    driver: bridge
+volumes:
+  portainer_data:       
