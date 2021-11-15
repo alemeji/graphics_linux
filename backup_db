@@ -3,4 +3,10 @@
 _now=$(date +"%m_%d_%Y_%H_%M_%S")
 _file="/backup/graphics_$_now.sql.gz"
 mysqldump --user=root --password=$MYSQL_ROOT_PASSWORD -h db --databases $MYSQL_DATABASE | gzip -9 > $_file 2>&1
+if [ -e $_file ]
+then
+    python /app/app.py -f $_file
+else
+    echo "No encontre archivo $_file"
+fi
 

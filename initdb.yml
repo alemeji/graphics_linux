@@ -16,7 +16,8 @@ services:
       - 3306
     volumes:
       # - ./my.cnf:/etc/mysql/my.cnf
-      - ${GRAPHICS_PATH_DRIVER_DATA}/data/mysql:/var/lib/mysql
+      - ./data.sql:/docker-entrypoint-initdb.d/data.sql
+      - data_db:/var/lib/mysql
     networks:
       - graphics_net
     healthcheck:
@@ -24,6 +25,23 @@ services:
       interval: 1m30s
       timeout: 10s
       retries: 3  
+
+  db-backup:
+    image: alemeji/db-backup:2.0
+    # build: ./alpine
+    container_name: db_backup_graphics
+    restart: always
+    env_file: .env
+    command: /bin/sh -c "ln -snf /usr/share/zoneinfo/${TZ} /etc/localtime && echo ${TZ} > /etc/timezone"
+    command: /bin/sh -c "ln -snf /etc/periodic/nightly/backup_db /etc/periodic/daily/backup_db ; crond; while sleep 30; do echo "Running..." ; done"
+    volumes:
+      - ./backup_db:/etc/periodic/nightly/backup_db:rw
+      - ./crontab.txt:/etc/crontabs/root:rw
+      - ${GRAPHICS_PATH_DRIVER_BACKUP}:/backup
+    depends_on:
+      - db
+    networks:
+      - graphics_net
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin:4.8
@@ -43,4 +61,5 @@ networks:
   graphics_net:
     driver: bridge
 volumes:
-  portainer_data:       
+  portainer_data:
+  data_db:
