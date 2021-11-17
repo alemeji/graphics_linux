@@ -15,7 +15,7 @@ services:
       - 3306:3306
     volumes:
       # - ./my.cnf:/etc/mysql/my.cnf
-      - ${GRAPHICS_PATH_DRIVER_DATA}/data/mysql:/var/lib/mysql
+      - data_db:/var/lib/mysql
       - ${GRAPHICS_PATH_DRIVER_BACKUP}:/backup
     networks:
       - graphics_net
@@ -51,7 +51,7 @@ services:
       - graphics_net
 
   db-backup:
-    image: alemeji/db-backup:latest
+    image: alemeji/db-backup:1.1
     # build: ./alpine
     container_name: db_backup_graphics
     restart: always
@@ -145,4 +145,5 @@ networks:
   graphics_net:
     driver: bridge
 volumes:
-  portainer_data:       
+  portainer_data:
+  data_db:

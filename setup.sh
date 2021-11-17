@@ -18,7 +18,8 @@ sudo apt-get install -y anydesk
 #Imagenes
 sudo docker pull percona:5.7
 sudo docker pull alemeji/graphics:latest
-sudo docker pull alemeji/db-backup:2.0
+sudo docker pull alemeji/db-backup:1.1
+# sudo docker pull alemeji/db-backup:2.0
 sudo docker pull rabbitmq:3.6.1
 sudo docker pull phpmyadmin/phpmyadmin:4.8
 sudo docker pull portainer/portainer

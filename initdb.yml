@@ -16,7 +16,7 @@ services:
       - 3306
     volumes:
       # - ./my.cnf:/etc/mysql/my.cnf
-      - ./data.sql:/docker-entrypoint-initdb.d/data.sql
+      #- ./data.sql:/docker-entrypoint-initdb.d/data.sql
       - data_db:/var/lib/mysql
     networks:
       - graphics_net
@@ -27,7 +27,7 @@ services:
       retries: 3  
 
   db-backup:
-    image: alemeji/db-backup:2.0
+    image: alemeji/db-backup:1.1
     # build: ./alpine
     container_name: db_backup_graphics
     restart: always
