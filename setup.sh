@@ -15,6 +15,15 @@ echo "deb http://deb.anydesk.com/ all main" | sudo tee /etc/apt/sources.list.d/a
 sudo apt-get update
 sudo apt-get install -y anydesk
 
+#Creacion del directorio de trabajo
+WORK_DIR=/proyectos/virtualenv/graphics/
+sudo mkdir -p $WORK_DIR
+sudo cp crontab.txt backup_db initdb.yml prod.yml $WORK_DIR
+
+#Creacion del directorio de la base de datos
+sudo mkdir -p /dev/data_db
+sudo chmod -R a+rwx /dev/data_db
+
 #Imagenes
 sudo docker pull percona:5.7
 sudo docker pull alemeji/graphics:latest
@@ -24,7 +33,4 @@ sudo docker pull rabbitmq:3.6.1
 sudo docker pull phpmyadmin/phpmyadmin:4.8
 sudo docker pull portainer/portainer
 
-#Creacion del directorio de trabajo
-WORK_DIR=/proyectos/virtualenv/graphics/
-sudo mkdir -p $WORK_DIR
-sudo cp crontab.txt backup_db initdb.yml prod.yml $WORK_DIR
+

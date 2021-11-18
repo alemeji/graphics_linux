@@ -16,8 +16,8 @@ services:
       - 3306
     volumes:
       # - ./my.cnf:/etc/mysql/my.cnf
-      #- ./data.sql:/docker-entrypoint-initdb.d/data.sql
-      - data_db:/var/lib/mysql
+      - ./data.sql:/docker-entrypoint-initdb.d/data.sql
+      - ${GRAPHICS_PATH_DRIVER_DATA}:/var/lib/mysql
     networks:
       - graphics_net
     healthcheck:
@@ -62,4 +62,3 @@ networks:
     driver: bridge
 volumes:
   portainer_data:
-  data_db:
