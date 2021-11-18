@@ -51,7 +51,7 @@ services:
       - graphics_net
 
   db-backup:
-    image: alemeji/db-backup:1.1
+    image: alemeji/db-backup:2.0
     # build: ./alpine
     container_name: db_backup_graphics
     restart: always
